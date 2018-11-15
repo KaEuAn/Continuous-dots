@@ -15,9 +15,6 @@ private:
 
 public:
 
-  bool isCombinable(Area) const {
-
-  }
 };
 
 class Table {
@@ -30,4 +27,6 @@ private:
 
 public:
   Table(u32 p, u32 a) : x_min(0), x_max(0), y_min(1e6), y_max(1e6), players_number(n), areas_number(a), areas(areas_number) {}
+
+
 };

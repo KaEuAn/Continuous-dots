@@ -13,20 +13,21 @@
 #include <cmath>
 #include <typeinfo>
 #include <set>
+#include <list>
 #define PI 3.1415926535897932384626433832795
 using ld = long double;
 using ll = long long;
 using u32 = uint32_t;
 
-bool approximatelyEqual (const ld a, const ld b) {
+bool isEqual (const ld a, const ld b) {
   ld eps = 2e-10;
   ld difference = a - b;
   if (difference < 0)
     difference *= -1;
   return difference < eps;
 }
-bool approximatelyEqual (const Point& a, const Point& b) {
-  return approximatelyEqual(a.x, b.x) && approximatelyEqual(a.y, b.y);
+bool isEqual (const Point& a, const Point& b) {
+  return aisEqual(a.x, b.x) && isEqual(a.y, b.y);
 }
 
 bool isLessThan(ld x, ld y) {
@@ -45,7 +46,7 @@ struct Point {
   Point(const Point& a) : x(a.x), y(a.y) {}
 
   bool operator ==(const Point& a) const {
-    return (approximatelyEqual(x, a.x) && approximatelyEqual(y, a.y));
+    return (isEqual(x, a.x) && isEqual(y, a.y));
   }
 
   bool operator != (const Point& a) {
@@ -90,6 +91,10 @@ struct Point {
     return sqrt((x - b.x) * (x - b.x) + (y - b.y) * (y - b.y));
   }
 
+  bool isBetweenY(const Point& a, const Point& b) const {
+    return (isLessThan(y, b,y) && isLessThan(a.y, y)) || (! isLGreaterThan(y. b.y) && ! isGraterThan(a.y, y));
+  }
+
   void scale(Point center, ld coefficient) {
     x += (x - center.x) * (coefficient - 1);
     y += (y - center.y) * (coefficient - 1);
@@ -125,101 +130,49 @@ struct Point {
   }
 };
 
-class Polygon {
+ld Radius = 10;
 
-protected:
-  std::vector<Point> vertices;
-
-  void pushEl(Point a) {
-    vertices.push_back(a);
-  }
-
-  template<class... Args>
-  void pushEl(Point a, Args... args) {
-    vertices.push_back(a);
-    pushEl(args...);
-  }
-public:
-  //constructors
-  template<class... Args>
-  Polygon(Args... args) {
-    pushEl(args...);
-  }
-  Polygon (std::vector<Point>& vec): vertices(vec){}
-  //
-
-  virtual ~Polygon() {};
-
-  const std::vector<Point> getVertices () const {
-    return vertices;
-  }
-  uint32_t verticesCount() const {
-    return vertices.size();
-  }
-
+struct boolAndIt{
+  bool answer;
+  std::list<Point>::const_iterator first_it;
+  std::list<Point>::const_iterator second_it;
 };
 
-
-Point cmpPoint; //by x
 //isLess
-//if cmpPoint
-bool smartCompare(Point b, Point c) {
-  ld vect = (b - cmpPoint) % (c - cmpPoint);
-  if ( (isLessThan(b.x, cmpPoint.x) && isLessThan(c.x, cmpPoint.x)) || (isGreaterThan(b.x, cmpPoint.x) && isGreaterThan(c.x, cmpPoint.x)) )
-    return (isGreaterThan(vect, 0));
-  if (isLessThan(b.x, cmpPoint.x))
-    return false;
-  return true;
-}
-bool xCompare(Point a, Point b) {
-  if (isZero(a.x - b.x))
-    return a.y < b.y;
-  return a.x < b.x;
+bool smartCompare(Point cmpPoint, Point b, Point c) {
+  ld ans = (b - cmpPoint) % (c - cmpPoint);
+  return (isGreaterThan(ans, 0));
 }
 
-vector<Point> makeConvexHull_first(vector<Point>& xy, uint32_t n) {
-  vector<Point> convexHull;
-  convexHull.reserve(n);
-  std::sort(xy.begin(), xy.end(), xCompare);
-  cmpPoint = xy[0];
-  std::sort(++xy.begin(), xy.end(), smartCompare);
-  for (int i = 1; i < n; ++i) {
-    while (convexHull.size() >= 2 && !smartCompare1 (convexHull[convexHull.size() - 2],
-                                                     convexHull[convexHull.size() - 1], xy[i]))
-      convexHull.pop_back();
-    convexHull.push_back(convexHull[i]);
-  }
-  return convexHull;
-}
-
-class ConvexHull{
+class DotArea{
 private:
-  std::set<Point, smartCompare> points;
+  std::list<Point> points;
   int team_number;
+  u32 len;
 public:
   ConvexHull(const vector<Point>& p_inp, int t) {
     team_number = t;
-    vector<Point> convh = makeConvexHull_first(p_inp, p_inp.size());
-    points(convh.begin(), convh.end());
+    points(p_inp.begin(), p_inp.end());
+    len = p_inp.size();
   }
   ConvexHull(const Point& p_inp, int t) {
     team_number = t;
-    vector<Point> convh = vector<Point>();
-    convh.push_back(p_inp);
-    cmpPoint = p_inp;
-    points(convh.begin(), convh.end());
+    points.push_back(p_inp);
+    len = 1;
   }
 
   bool isIn(const Point& point) const {
-    std::set<Point, smartCompare>::iterator it_prev = nullptr, it = points.begin();
+    std::set<Point>::const_iterator it_prev = nullptr, it = points.begin();
+    int per = 0;
     while (it != points.end()) {
-      ld vect = (point - *it) % (*it_prev - *it);
-      if (isLessThan(vect, 0))
-        return false;
+      if (! isEqual(it->y, it_prev->y) && point.isBetweenY(*it, *it_prev)) {
+        if (isGreaterThan((point - *it_prev) % (*it - *it_prev), 0))
+          ++per;
+      }
       it_prev = it;
       ++it;
     }
-    return true;
+    return per % 2;
   }
 
   bool isIn(const ConvexHull& hull) const {
@@ -228,5 +181,40 @@ public:
         return false;
     }
     return true;
+  }
+
+
+  boolAndIt isCombinable(const DotArea& other) const {
+    for(const auto& it: points) {
+      for(const auto& other_it: other.points) {
+        if (isLessThan(it.lengthToPoint(other_it), Radius))
+          return {true, it, other_it};
+      }
+    }
+    return {false, nullptr, nullptr};
+  }
+
+  void combine(DotArea& other, boolAndIt answer) {
+    Point p_new = Point(*(answer.first_it));
+    const auto& pos = std::next(answer.first_it);
+    points.splice(pos, other.points, answer.second_it, other.points.end());
+    points.emplace(pos, std::move(p_new));
+  }
+
+  void ezOptimize() {
+    if (len < 3)
+      return;
+    const auto& it = points.begin();
+    const auto& it_prr = it++;
+    const auto& it_pr = it++;
+
+    while (len >= 2 && it != points.end()) {
+      while(it != points.end() && !smartCompare(*it_prr, *it_pr, *it) && isLessThan(it->lengthToPoint(*it_prr), Radius)) {
+        points.erase(it);
+        it = std::next(it_pr);
+      }
+      ++it, ++it_pr, ++it_prr;
+    }
+
   }
 };
