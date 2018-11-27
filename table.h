@@ -26,7 +26,8 @@ private:
   std::vector<Area> areas;
 
 public:
-  Table(u32 p, u32 a) : x_min(0), x_max(0), y_min(1e6), y_max(1e6), players_number(n), areas_number(a), areas(areas_number) {}
+  Table(u32 pla_n, u32 a) : x_min(0), x_max(1e6), y_min(0), y_max(1e6), players_number(pla_n), areas_number(a), areas(areas_number) {}
+  Table(u32 n, u32 m, u32 pla_n, u32 a) : x_min(0), x_max(n), y_min(1e6), y_max(m), players_number(pla_n), areas_number(a), areas(areas_number) {}
 
-
+  
 };

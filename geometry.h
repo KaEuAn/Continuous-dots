@@ -146,16 +146,17 @@ bool smartCompare(Point cmpPoint, Point b, Point c) {
 
 class DotArea{
 private:
+  bool isActive;
   std::list<Point> points;
   int team_number;
   u32 len;
 public:
-  ConvexHull(const vector<Point>& p_inp, int t) {
+  DotArea(const vector<Point>& p_inp, int t) : isActive(true) {
     team_number = t;
     points(p_inp.begin(), p_inp.end());
     len = p_inp.size();
   }
-  ConvexHull(const Point& p_inp, int t) {
+  DotArea(const Point& p_inp, int t) : isActive(true) {
     team_number = t;
     points.push_back(p_inp);
     len = 1;
