@@ -19,8 +19,9 @@ using ld = long double;
 using ll = long long;
 using u32 = uint32_t;
 
+ld eps = 2e-10;
+
 bool isEqual (const ld a, const ld b) {
-  ld eps = 2e-10;
   ld difference = a - b;
   if (difference < 0)
     difference *= -1;
@@ -31,10 +32,14 @@ bool isEqual (const Point& a, const Point& b) {
 }
 
 bool isLessThan(ld x, ld y) {
-  return x < y - EPS;
+  return x < y - eps;
 }
 bool isGreaterThan(ld x, ld y) {
-  return x >  y + EPS;
+  return x >  y + eps;
+}
+
+bool isLessOrEqual(ld x, ld y) {
+  return isLessThan(x, y) || isEqual(x, y)
 }
 
 struct Point {
@@ -148,15 +153,15 @@ class DotArea{
 private:
   bool isActive;
   std::list<Point> points;
-  int team_number;
+  u32 team_number;
   u32 len;
 public:
-  DotArea(const vector<Point>& p_inp, int t) : isActive(true) {
+  DotArea(const vector<Point>& p_inp, u32 t) : isActive(true) {
     team_number = t;
     points(p_inp.begin(), p_inp.end());
     len = p_inp.size();
   }
-  DotArea(const Point& p_inp, int t) : isActive(true) {
+  DotArea(const Point& p_inp, u32 t) : isActive(true) {
     team_number = t;
     points.push_back(p_inp);
     len = 1;
@@ -183,7 +188,6 @@ public:
     }
     return true;
   }
-
 
   boolAndIt isCombinable(const DotArea& other) const {
     for(const auto& it: points) {
@@ -217,5 +221,67 @@ public:
       ++it, ++it_pr, ++it_prr;
     }
 
+  }
+
+  void Djarvis() {
+    if (len < 3)
+      return;
+    
+    std::list<Point> new_list;
+    ld minx = 99999999;
+    std::list<Point>::iterator cur;
+    for(auto& it: points){
+      if(it->x < minx) {
+        cur = it;
+        minx = cur->x;
+      }
+    }
+    new_list.push_back(*cur);
+    points.erase(cur);
+    std::list<Point>::iterator start = cur;
+    std::list<Point>::iterator itnext(nullptr;
+    for(auto& it: points){
+      if (itnext == nullptr) {
+        if (isLessOrEqual(it->lengthToPoint(*cur), Radius))
+          itnext = it;
+      }
+      else {
+        if (smartCompare(*cur, *itnext, *it) && isLessOrEqual(it->lengthToPoint(*cur), Radius)) {
+          itnext = it;
+        }
+      }
+    }
+    new_list.push_back(*cur);
+    points.erase(cur);
+    ld new_len = 2;
+    //so now we have to start points
+    while(*start != *itnext) {
+      std::list<Point>::iterator new_point = nullptr;
+      bool isConvexSituation = true;
+      for(auto& it: points){
+        if (smartCompare(*cur, *itnext, *it)) {
+           //convex point (more left than or point)
+          if ((! isConvexSituation) || isGreaterThan(it->lengthToPoint(*itnext), Radius) )
+            continue;
+          if (new_point == nullptr || smartCompare(*itnext, *it, *new_point)) {
+            new_point = it;
+          }
+        } else {
+          if (isGreaterThan(it->lengthToPoint(*itnext), Radius)) {
+            continue;
+          }
+          //we found inconvex place and shoud go here to maximize square
+          if (isConvexSituation)
+            new_point = it;
+          if (smartCompare(*itnext, *it, *new_point))
+            new_point = it;
+          isConvexSituation = false;
+          
+        }
+      }
+    }
+
+    len = new_len;
+    points = new_list; 
   }
 };
