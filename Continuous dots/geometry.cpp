@@ -1,11 +1,7 @@
 //
 // Created by Eugene on 14.11.2018.
 //
-
-#ifndef CONTINUOUS_DOTS_GEOMETRY_H
-#define CONTINUOUS_DOTS_GEOMETRY_H
-
-
+#pragma once
 
 #include <cstdio>
 #include <vector>
@@ -315,5 +311,3 @@ public:
     points = new_list; 
   }
 };
-
-#endif //CONTINUOUS_DOTS_GEOMETRY_H

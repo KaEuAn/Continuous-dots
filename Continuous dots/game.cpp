@@ -1,7 +1,8 @@
+#pragma once
 
-#include "geometry.h"
-#include "table.h"
-#include "connection.h"
+#include "geometry.hpp"
+#include "table.hpp"
+#include "connection.hpp"
 #include <thread>
 #include <mutex>
 #include <functional>
@@ -116,12 +117,4 @@ public:
       clear(input, 20);
     }
   }
-}
-
-int main(int argc, char *argv[]) {
-  Game game;
-  game.process(argc, argv);
-  
-  
-  return 0;
 }

@@ -1,11 +1,7 @@
 //
 // Created by Eugene on 30.11.2018.
 //
-
-#ifndef INC_4_SEMESTER_CONNECTION_H
-#define INC_4_SEMESTER_CONNECTION_H
-
-#endif //INC_4_SEMESTER_CONNECTION_H
+#pragma once
 
 #include <iostream>
 #include <stdio.h>

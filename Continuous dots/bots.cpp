@@ -1,10 +1,7 @@
 //
 // Created by Eugene on 27.11.2018.
 //
-
-#ifndef CONTINUOUS_DOTS_BOTS_H
-#define CONTINUOUS_DOTS_BOTS_H
-
+#pragma once
 
 #include <cstdlib>
 #include "geometry.h"
@@ -28,7 +25,7 @@ public:
     return {n * std::rand(), m * std::rand()};
   }
 
-  void connect(Table* table, bot_thread_number) {
+  void connect(Game* game, bot_thread_number) {
     struct sockaddr_in address;
     struct sockaddr_in serv_addr; 
     int Socket;
@@ -62,11 +59,11 @@ public:
       for(u32 i = 0; i < answer.size(); ++i) {
         resp[i] = answer[i];
       }
-      std::unique_lock<std::mutex> lock(table->bots_mutexes[bot_thread_number]);
-      while(table->bots_iterations[bot_thread_number] == table->bots_made[bot_thread_number] || table->isStopped) {
+      std::unique_lock<std::mutex> lock(game->bots_mutexes[bot_thread_number]);
+      while(game->bots_iterations[bot_thread_number] == game->bots_made[bot_thread_number] || game->isStopped) {
         // т.к. либо они изначально равны, либо мы остановились и нужно приравнять, т.к. мы под мьютексом - всё ок
-        table->bots_iterations[bot_thread_number] = table->bots_made[bot_thread_number];
-        if (table->isStopped) {
+        game->bots_iterations[bot_thread_number] = game->bots_made[bot_thread_number];
+        if (game->isStopped) {
           std::cout << "Bot " << bot_thread_number << " is stopped";
         }
         cond_var.wait(lock);
@@ -77,6 +74,3 @@ public:
 
   }
 };
-
-
-#endif //CONTINUOUS_DOTS_BOTS_H

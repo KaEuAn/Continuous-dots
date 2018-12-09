@@ -1,9 +1,7 @@
 //
 // Created by Eugene on 14.11.2018.
 //
-
-#ifndef CONTINUOUS_DOTS_TABLE_H
-#define CONTINUOUS_DOTS_TABLE_H
+#pragma once
 
 #include "geometry.h"
 #include <iostream>
@@ -65,7 +63,7 @@ private:
   u32 players_count, make_turn;
   std::vector<std::mutex> mutexes;
   std::vector<std::thread> threads;
-
+  
 public:
   Table(u32 a) : x_min(0), x_max(1e6), y_min(0), y_max(1e6), max_players_number(0), areas_number(a), areas(areas_number)
           , players_count(0), make_turn(0), mutexes(areas_number) {}
@@ -80,6 +78,7 @@ public:
     u32 i = static_cast<u32> ((point.x - x_min) / (x_max - x_min) * areas_number + 0.0000001);
     areas[i].addPoint(std::forward<Point>(point));
   }
+
 
   void optimize(u32 i) {
     //first part
@@ -156,7 +155,7 @@ public:
     }
   }
 
-  void connect(Table* table) {
+  void connect() {
 
     int serverSocket;
     if ((serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) == 0) {
@@ -267,7 +266,7 @@ public:
           while (buffer[i] <= '9' || buffer[i] >= '0') {
             y += ans * buffer[i]; ans /= 10; ++i;
           }
-          table.addPoint(std::move(Point), player->number);
+          addPoint(std::move(Point), player->number);
           ++make_turn;
         }
       } // end for
@@ -285,6 +284,3 @@ public:
     }
   }
 };
-
-
-#endif //CONTINUOUS_DOTS_TABLE_H
