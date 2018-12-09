@@ -35,22 +35,25 @@ u32 isRun(char* input) {
 }
 
 Class Game() {
+public:
   u32 n, m, player_number, area_number, count;
-  bool isStarted = false;
+  bool isStarted, isStopped, isQuited;
   pthread_t player_comp;
   
   Table table;
   std::vector<Bot> bots;
-  std::vector<std::mutex> mutexes;
+  std::vector<std::mutex> bot_mutexes;
   std::vector<u32> bots_iterations;
   std::vector<u32> bots_made;
+  std::vector<std::thread> bot_threads;
+  std::thread server_thread;
   
   std::condition_variable cond_var;
   
   char* input;
 
-  Game(): n(1000), m(1000), player_number(2), area_number(4), count(0), isStarted(false), table(n, m, area_number)
-  ,bots(player_number, 1), mutexes(area_number + 1), bots_iterations(player_number, 0), bots_made(player_number, 0){
+  Game(): n(1000), m(1000), player_number(2), area_number(4), count(0), isStarted(false), isStopped(false), isQuited(false), table(n, m, area_number)
+  ,bots(player_number, 1), bot_mutexes(area_number + 1), bots_iterations(player_number, 0), bots_made(player_number, 0){
     input = new char[20];
     clear(input, 20);
   }
@@ -58,49 +61,67 @@ Class Game() {
     delete[] input;
   }
 
-  м
+  void stop() {
+    // и я кричу остановите плёнку
+    // это кино я уже смотрел
+    isStopped = true;
+  }
+  
+  void print() {
+    table.print();
+  }
+
+  void process(int argc, char *argv[]) {
+    while(gets(input)) {
+      if (isStart(input)) {
+        if (isStarted) {
+          std::cout << "we are started\n";
+          continue;
+        }
+        isStarted = true;
+        if (argc == 1) {
+          n = static_cast<int>(argv[1]);
+          m = n;
+        }
+        if (argc == 2) {
+          n = static_cast<int>(argv[1]);
+          m = static_cast<int>(argv[2]);
+        }
+        table.reset(n, m, area_number);
+        server_thread = std::thread(&Table::connect, table, this).detach();
+
+        for(u32 i = 0; i < bots.size(); ++i) {
+          bots[i].team_number = i + 1;
+          bot_threads.push_back(std::move(std::thread(&Bot::connect, bots[i], this, i).detach()));
+        }
+
+      } else if (count = isRun(input)) {
+        for(u32 num = 0; num < player_number; ++num) {
+          bot_mutexes[num].lock();
+          bots_iterations[num] += count;
+        }
+        for(u32 num = 0; num < player_number; ++num) {
+          bot_mutexes[num].unlock();
+        }
+        isStopped = false;
+        cond_var.notify_all();
+      } else if (isStop(input)) {
+        stop();
+      } else if (isQuit(input)) {
+        isQuited = true;
+      } else { //isStatus
+        stop();
+        print();
+      }
+      clear(input, 20);
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {
   Game game;
+  game.process(argc, argv);
   
   
-  while(gets(input)) {
-    if (isStart(input)) {
-      if (isStarted) {
-        std::cout << "we are started\n";
-        continue;
-      }
-      isStarted = true;
-      if (argc == 1) {
-        n = static_cast<int>(argv[1]);
-        m = n;
-      }
-      if (argc == 2) {
-        n = static_cast<int>(argv[1]);
-        m = static_cast<int>(argv[2]);
-      }
-      table.reset(n, m, area_number);
-      std::thread(&table.connect).detach();
-
-      for(u32 i = 0; i < bots.size(); ++i) {
-        bots[i].team_number = i + 1;
-        std::thread(&bots[i].connect, std::ref(bots_iterations), std::ref(bots_made), i, std::ref(cond_var)).detach();
-      }
-
-    } else if (count = isRun(input)) {
-      for(auto it: bots_iterations) {
-        (*it) += count;
-      }
-      table.cond_var.notify_all();
-    } else if (isStop(input)) {
-      
-    } else if (isQuit(input)) {
-
-    } else { //isStatus
-
-    }
-    clear(input, 20);
-  }
   return 0;
 }

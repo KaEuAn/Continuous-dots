@@ -134,6 +134,10 @@ struct Point {
   ld operator*(const Point& second) const {
     return scalarProduct(second);
   }
+
+  void print() const {
+    std::cout << std::setprecision(3) << x << ' ' << y;
+  }  
 };
 
 u32 max(u32 a, u32 b) {
@@ -180,6 +184,16 @@ public:
   }
   DotArea(Point&& p_inp, u32 t) : isActive(true), team_number(t), len(1), max_area(0)  {
     points.emplace_back(std::forward<Point>(p_inp));
+  }
+
+  bool print() const {
+    if (!isActive)
+      return false;
+    std::cout << "team number " << team_number << ", points:";
+    for(auto& it: points) {
+      it->print();
+      std::cout << "; ";
+    }
   }
 
   bool hasIn(const Point& point) const {

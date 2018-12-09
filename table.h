@@ -43,6 +43,14 @@ public:
     dot_areas.emplace_back({point, t});
     ++len;
   }
+  
+  void print() const {
+    for(auto& it: dot_areas) {
+      bool isPrinted = it->print();
+      if (isPrinted)
+        std::cout << '\n';
+    }
+  }
 
 };
 
@@ -56,6 +64,7 @@ private:
   std::list<Player> players;
   u32 players_count, make_turn;
   std::vector<std::mutex> mutexes;
+  std::vector<std::thread> threads;
 
 public:
   Table(u32 a) : x_min(0), x_max(1e6), y_min(0), y_max(1e6), max_players_number(0), areas_number(a), areas(areas_number)
@@ -141,7 +150,13 @@ public:
     }
   }
 
-  void connect() {
+  void print() {
+    for(u32 i = 0; i < areas_number; ++i) {
+      areas[i].print();
+    }
+  }
+
+  void connect(Table* table) {
 
     int serverSocket;
     if ((serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) == 0) {
@@ -257,8 +272,14 @@ public:
         }
       } // end for
       if (make_turn == players_count && player_count != 0) {
+        //make processing of table
         for(u32 i = 0; i < areas_number; ++i) {
-
+          threads.push_back(std::move(std::thread(&Table::optimize, this, i).detach()));
+        }
+        //our barrier
+        for(u32 i = areas_number - 1; i >= 0 ; +--) {
+          threads[i].join();
+          therads.pop_back();
         }
       }
     }

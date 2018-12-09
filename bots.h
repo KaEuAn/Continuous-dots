@@ -28,7 +28,7 @@ public:
     return {n * std::rand(), m * std::rand()};
   }
 
-  void connect(std::vector<u32> bots_iterations, std::vector<u32> bots_made, u32 bot_thread_number, std::condition_variable cond_var) {
+  void connect(Table* table, bot_thread_number) {
     struct sockaddr_in address;
     struct sockaddr_in serv_addr; 
     int Socket;
@@ -62,9 +62,16 @@ public:
       for(u32 i = 0; i < answer.size(); ++i) {
         resp[i] = answer[i];
       }
-      while(bots_iterations[bot_thread_number] == bots_made[bot_thread_number]) {
-        cond_var.wait(std::unique_lock<std::mutex>(std::mutex()));
+      std::unique_lock<std::mutex> lock(table->bots_mutexes[bot_thread_number]);
+      while(table->bots_iterations[bot_thread_number] == table->bots_made[bot_thread_number] || table->isStopped) {
+        // т.к. либо они изначально равны, либо мы остановились и нужно приравнять, т.к. мы под мьютексом - всё ок
+        table->bots_iterations[bot_thread_number] = table->bots_made[bot_thread_number];
+        if (table->isStopped) {
+          std::cout << "Bot " << bot_thread_number << " is stopped";
+        }
+        cond_var.wait(lock);
       }
+      lock.unlock();
       send(Socket, resp, answer.size());
     }
 
