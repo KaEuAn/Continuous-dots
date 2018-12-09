@@ -1,16 +1,13 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "table.hpp"
-#include "connection.hpp"
+#include "geometry.cpp"
+#include "table.cpp"
+#include "bots.cpp"
 #include <thread>
 #include <mutex>
 #include <functional>
 #include <atomic>
 
-void clear(char* input, u32 size) {
-  for(u32 i = 0; i < size; ++i) size[i] = 0;
-}
 
 bool isStart(char* input) {
   return input[0] == 's' && input[1] == 't' && input[2] == 'a' && input[3] == 'r' && input[4] == 't';
@@ -35,7 +32,7 @@ u32 isRun(char* input) {
   return answer;
 }
 
-Class Game() {
+class Game {
 public:
   u32 n, m, player_number, area_number, count;
   bool isStarted, isStopped, isQuited;

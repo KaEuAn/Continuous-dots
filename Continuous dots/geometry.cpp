@@ -11,6 +11,8 @@
 #include <set>
 #include <list>
 #include <utility>
+#include <iostream>
+#include <iomanip>
 #define PI 3.1415926535897932384626433832795
 using ld = long double;
 using ll = long long;
@@ -18,14 +20,12 @@ using u32 = uint32_t;
 
 ld eps = 2e-10;
 
+
 bool isEqual (const ld a, const ld b) {
   ld difference = a - b;
   if (difference < 0)
     difference *= -1;
   return difference < eps;
-}
-bool isEqual (const Point& a, const Point& b) {
-  return aisEqual(a.x, b.x) && isEqual(a.y, b.y);
 }
 
 bool isLessThan(ld x, ld y) {
@@ -36,7 +36,7 @@ bool isGreaterThan(ld x, ld y) {
 }
 
 bool isLessOrEqual(ld x, ld y) {
-  return isLessThan(x, y) || isEqual(x, y)
+  return isLessThan(x, y) || isEqual(x, y);
 }
 
 struct Point {
@@ -59,6 +59,7 @@ struct Point {
     Point c(*this);
     c.x -= a.x;
     c.y -= a.y;
+    return c;
   }
   Point& operator += (const Point& a) {
     x += a.x;
@@ -93,31 +94,6 @@ struct Point {
     return sqrt((x - b.x) * (x - b.x) + (y - b.y) * (y - b.y));
   }
 
-  bool isBetweenY(const Point& a, const Point& b) const {
-    return (isLessThan(y, b,y) && isLessThan(a.y, y)) || (! isLGreaterThan(y. b.y) && ! isGraterThan(a.y, y));
-  }
-
-  void scale(Point center, ld coefficient) {
-    x += (x - center.x) * (coefficient - 1);
-    y += (y - center.y) * (coefficient - 1);
-  }
-  void rotate(Point center, ld angle) {
-    Point differ = *this - center;
-    ld old_angle = std::asin(angle());
-    angle *= PI/180;
-    old_angle += angle;
-    x = std::sin(old_angle) * differ.length();
-    y = std::cos(old_angle) * differ.length();
-  }
-  void reflex(Line axis) {
-    Line perAxis = axis.makePerpendicularLine(*this);
-    Point a = perAxis.intersection(axis);
-    (*this) += (a - (*this)) * 2;
-  }
-  void reflex(Point center) {
-    scale(center, -1);
-  }
-
   ld scalarProduct(const Point& a) const {
     return a.x * x + a.y * y;
   }
@@ -129,6 +105,9 @@ struct Point {
   }
   ld operator*(const Point& second) const {
     return scalarProduct(second);
+  }
+  bool isBetweenY(const Point& a, const Point& b) const {
+    return (isLessThan(y, b.y) && isLessThan(a.y, y)) || (! isGreaterThan(y, b.y) && ! isGreaterThan(a.y, y));
   }
 
   void print() const {
@@ -148,6 +127,11 @@ u32 min(u32 a, u32 b) {
   return b;
 }
 
+
+bool isEqual (const Point& a, const Point& b) {
+  return isEqual(a.x, b.x) && isEqual(a.y, b.y);
+}
+
 ld Radius = 10;
 
 struct boolAndIt{
@@ -163,16 +147,15 @@ bool smartCompare(Point cmpPoint, Point b, Point c) {
 }
 
 class DotArea{
-private:
+public:
   bool isActive;
   u32 team_number;
   u32 len;
   u32 max_area;
   std::list<Point> points;
 public:
-  DotArea(const vector<Point>& p_inp, u32 t) : isActive(true), team_number(t), len(p_int.size()), max_area(0) {
-    team_number = t;
-    points(p_inp.begin(), p_inp.end());
+  DotArea(const std::vector<Point>& p_inp, u32 t) : isActive(true), team_number(t), len(p_inp.size()), max_area(0)
+  , points(p_inp.begin(), p_inp.end()) {
     len = p_inp.size();
   }
   DotArea(const Point& p_inp, u32 t) : isActive(true), team_number(t), len(1), max_area(0) {
@@ -182,18 +165,26 @@ public:
     points.emplace_back(std::forward<Point>(p_inp));
   }
 
+  bool isActivef() const {
+    return isActive;
+  }
+  u32 getMaxArea() const {
+    return max_area;
+  }
+
   bool print() const {
     if (!isActive)
       return false;
     std::cout << "team number " << team_number << ", points:";
     for(auto& it: points) {
-      it->print();
+      it.print();
       std::cout << "; ";
     }
+    return true;
   }
 
   bool hasIn(const Point& point) const {
-    std::set<Point>::const_iterator it_prev = nullptr, it = points.begin();
+    std::list<Point>::const_iterator it_prev = static_cast<std::list<Point>::const_iterator>(nullptr), it = points.begin();
     int per = 0;
     while (it != points.end()) {
       if (! isEqual(it->y, it_prev->y) && point.isBetweenY(*it, *it_prev)) {
@@ -215,13 +206,13 @@ public:
   }
 
   boolAndIt isCombinable(const DotArea& other) const {
-    for(const auto& it: points) {
-      for(const auto& other_it: other.points) {
-        if (isLessThan(it.lengthToPoint(other_it), Radius))
+    for(auto it = points.begin(); it != points.end(); ++it) {
+      for(auto other_it = points.begin(); other_it != other.points.end(); ++other_it) {
+        if (isLessThan(it->lengthToPoint(*other_it), Radius))
           return {true, it, other_it};
       }
     }
-    return {false, nullptr, nullptr};
+    return {false, static_cast<std::list<Point>::const_iterator>(nullptr), static_cast<std::list<Point>::const_iterator>(nullptr)};
   }
 
   void combine(DotArea& other, boolAndIt answer) {
@@ -235,9 +226,9 @@ public:
   void ezOptimize() {
     if (len < 3)
       return;
-    const auto& it = points.begin();
-    const auto& it_prr = it++;
-    const auto& it_pr = it++;
+    auto it = points.begin();
+    auto it_prr = it++;
+    auto it_pr = it++;
 
     while (len >= 2 && it != points.end()) {
       while(it != points.end() && !smartCompare(*it_prr, *it_pr, *it) && isLessThan(it->lengthToPoint(*it_prr), Radius)) {
@@ -256,7 +247,7 @@ public:
     std::list<Point> new_list;
     ld minx = 99999999;
     std::list<Point>::iterator cur;
-    for(auto& it: points){
+    for(auto it = points.begin(); it != points.end(); ++it){
       if(it->x < minx) {
         cur = it;
         minx = cur->x;
@@ -265,9 +256,9 @@ public:
     new_list.push_back(*cur);
     points.erase(cur);
     std::list<Point>::iterator start = cur;
-    std::list<Point>::iterator itnext(nullptr;
-    for(auto& it: points){
-      if (itnext == nullptr) {
+    std::list<Point>::iterator itnext(nullptr);
+    for(auto it = points.begin(); it != points.end(); ++it){
+      if (itnext == static_cast<std::list<Point>::iterator>(nullptr)) {
         if (isLessOrEqual(it->lengthToPoint(*cur), Radius))
           itnext = it;
       }
@@ -282,14 +273,14 @@ public:
     ld new_len = 2;
     //so now we have to start points
     while(*start != *itnext) {
-      std::list<Point>::iterator new_point = nullptr;
+      std::list<Point>::iterator new_point = static_cast<std::list<Point>::iterator>(nullptr);
       bool isConvexSituation = true;
-      for(auto& it: points){
+      for(auto it = points.begin(); it != points.end(); ++it){
         if (smartCompare(*cur, *itnext, *it)) {
            //convex point (more left than or point)
           if ((! isConvexSituation) || isGreaterThan(it->lengthToPoint(*itnext), Radius) )
             continue;
-          if (new_point == nullptr || smartCompare(*itnext, *it, *new_point)) {
+          if (new_point == static_cast<std::list<Point>::iterator>(nullptr) || smartCompare(*itnext, *it, *new_point)) {
             new_point = it;
           }
         } else {

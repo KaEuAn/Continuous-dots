@@ -4,7 +4,7 @@
 #pragma once
 
 #include <cstdlib>
-#include "geometry.h"
+#include "geometry.cpp"
 #include <string>
 #include <condition_variable>
 

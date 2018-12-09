@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include "geometry.h"
+#include "geometry.cpp"
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,15 +18,21 @@
 #include <stdlib.h>
 #include <string>
 #include <pthread.h>
+#include <thread>
 #include <mutex>
 #include <utility>
 #include <condition_variable>
 
 
+void clear(char* input, u32 size) {
+  for(u32 i = 0; i < size; ++i) input[i] = 0;
+}
+
 class Player{
 public:
   u32 number;
   int socket;
+  Player(u32 n, int s) : number(n), socket(s) {}
 };
 
 
@@ -38,13 +44,13 @@ public:
   Area() : len(0) {}
 
   void addPoint(Point&& point, u32 t) {
-    dot_areas.emplace_back({point, t});
+    dot_areas.emplace_back(DotArea(point, t));
     ++len;
   }
   
   void print() const {
     for(auto& it: dot_areas) {
-      bool isPrinted = it->print();
+      bool isPrinted = it.print();
       if (isPrinted)
         std::cout << '\n';
     }
@@ -74,9 +80,9 @@ public:
     x_max = n; y_max = m; areas_number = a;
   }
 
-  void addPoint(Point&& point) {
+  void addPoint(Point&& point, u32 t) {
     u32 i = static_cast<u32> ((point.x - x_min) / (x_max - x_min) * areas_number + 0.0000001);
-    areas[i].addPoint(std::forward<Point>(point));
+    areas[i].addPoint(std::forward<Point>(point), t);
   }
 
 
@@ -85,18 +91,18 @@ public:
     mutexes[i].lock();
     Area& my_area = areas[i];
     u32 max_area = i;
-    for(auto& it: my_area.dot_areas) {
-      if (! it->isActive)
+    for(auto it = my_area.dot_areas.begin(); it != my_area.dot_areas.end(); ++it) {
+      if (! it->isActivef())
         continue;
-      max_area = max(max_area, it->max_area);
+      max_area = max(max_area, it->getMaxArea());
       auto& new_it = it;
       while(new_it != my_area.dot_areas.end()) {
-        if (it == new_it || ! new_it.isActive) {
+        if (it == new_it || ! new_it->isActivef()) {
           continue; 
-          ++new_it
+          ++new_it;
         }
         boolAndIt answer;
-        if ((answer = it->isCombinable(*new_it)).first == true) {
+        if ((answer = it->isCombinable(*new_it)).answer == true) {
           it->combine(*new_it, answer);
           my_area.dot_areas.erase(new_it++);
           --my_area.len;
@@ -116,18 +122,18 @@ public:
       mutexes[j].lock();
       //can work with j now
       Area& new_area = areas[j];
-      for(auto& it: my_area.dot_areas) {
+      for(auto it = my_area.dot_areas.begin(); it != my_area.dot_areas.end(); ++it) {
         if (!it->isActive)
           continue;
         max_area = max(max_area, it->max_area);
-        auto& new_it = new_area.dot_areas.begin();
+        auto new_it = new_area.dot_areas.begin();
         while(new_it != my_area.dot_areas.end()) {
-          if (!new_it.isActive) {
+          if (!new_it->isActive) {
             continue; 
-            ++new_it
+            ++new_it;
           }
           boolAndIt answer;
-          if ((answer = it->isCombinable(*new_it)).first == true) {
+          if ((answer = it->isCombinable(*new_it)).answer == true) {
             it->combine(*new_it, answer);
             new_area.dot_areas.erase(new_it++);
             --new_area.len;
@@ -168,7 +174,7 @@ public:
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servaddr.sin_port = htons(8080);
-    int addrlen = sizeof(servaddr);
+    socklen_t addrlen = sizeof(servaddr);
     if(bind(serverSocket, (struct sockaddr *)&servaddr, sizeof(servaddr))<0){
       perror("bind failure");
       exit(1);
@@ -188,10 +194,9 @@ public:
       FD_ZERO(&readset);
       FD_SET(serverSocket, &readset);
       max_sd = serverSocket;
-      size_t request_size = ADD_SIZE_STRUCTURE;
 
       for(auto& player: players) {
-        int sd = player->socket;
+        int sd = player.socket;
         if (sd > 0) {
           FD_SET(sd, &readset);
         }
@@ -217,12 +222,12 @@ public:
           perror("accept failure");
         }
         ++max_players_number;
-        players.emplace_back({max_players_number, new_socket});
+        players.emplace_back(Player(max_players_number, new_socket));
         ++players_count;
         printf("accept succesful %d\n", new_socket);
 
-        std::string s = static_cast<std::string>(x_min) + " " + static_cast<std::string>(x_max) + " " +
-                static_cast<std::string>(y_min) + " " + static_cast<std::string>(y_max) + "\n";
+        std::string s = std::to_string(x_min) + " " + std::to_string(x_max) + " " +
+                std::to_string(y_min) + " " + std::to_string(y_max) + "\n";
         u32 ssize = s.size();
 
         if (send(new_socket, "new round is started\n", ssize, 0) != ssize) {
@@ -234,9 +239,9 @@ public:
       }
 
       //processing players input
-      for (auto& player: players) {
+      for (auto player = players.begin(); player != players.end(); ++player) {
         char buffer[1023];
-        clear(&buffer, 1023);
+        clear(buffer, 1023);
         int sd = player->socket;
         if (FD_ISSET(sd, &readset)) {
           int count;
@@ -251,12 +256,12 @@ public:
             x *= 10; x += static_cast<int>(buffer[i]); ++i;
           }
           ++i;
-          ans = 0.1;
+          ld ans = 0.1;
           while (buffer[i] <= '9' || buffer[i] >= '0') {
             x += ans * buffer[i]; ans /= 10; ++i;
           }
           while (!(buffer[i] <= '9' || buffer[i] >= '0')) {
-            ++i
+            ++i;
           }
           while (buffer[i] <= '9' || buffer[i] >= '0') {
             y *= 10; y += static_cast<int>(buffer[i]); ++i;
@@ -266,19 +271,19 @@ public:
           while (buffer[i] <= '9' || buffer[i] >= '0') {
             y += ans * buffer[i]; ans /= 10; ++i;
           }
-          addPoint(std::move(Point), player->number);
+          addPoint(std::move(Point(x, y)), player->number);
           ++make_turn;
         }
       } // end for
-      if (make_turn == players_count && player_count != 0) {
+      if (make_turn == players_count && players_count != 0) {
         //make processing of table
         for(u32 i = 0; i < areas_number; ++i) {
-          threads.push_back(std::move(std::thread(&Table::optimize, this, i).detach()));
+          threads.push_back(std::move(std::thread(&Table::optimize, this, i)));
         }
         //our barrier
-        for(u32 i = areas_number - 1; i >= 0 ; +--) {
+        for(int i = areas_number - 1; i >= 0 ; --i) {
           threads[i].join();
-          therads.pop_back();
+          threads.pop_back();
         }
       }
     }
