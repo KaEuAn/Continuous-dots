@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include "geometry.h"
 #include <string>
+#include <condition_variable>
 
 template<Typename T>
 std::string toString(T val, T val2)
@@ -28,7 +29,7 @@ public:
     return {n * std::rand(), m * std::rand()};
   }
 
-  void connect() {
+  void connect(std::vector<u32> bots_iterations, std::vector<u32> bots_made, u32 bot_thread_number, std::condition_variable cond_var) {
     struct sockaddr_in address;
     struct sockaddr_in serv_addr; 
     int Socket;
@@ -61,6 +62,9 @@ public:
       char resp[1000];
       for(u32 i = 0; i < answer.size(); ++i) {
         resp[i] = answer[i];
+      }
+      while(bots_iterations[bot_thread_number] == bots_made[bot_thread_number]) {
+        cond_var.wait(std::unique_lock());
       }
       send(Socket, resp, answer.size());
     }

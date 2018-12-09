@@ -30,33 +30,10 @@
 #include <stdlib.h>
 #include <string>
 #include <pthread.h>
+#include <mutex>
+#include <utility>
+#include <condition_variable>
 
-void clear(char* input, u32 size) {
-  for(u32 i = 0; i < size; ++i) size[i] = 0;
-}
-
-bool isStart(char* input) {
-  return input[0] == 's' && input[1] == 't' && input[2] == 'a' && input[3] == 'r' && input[4] == 't';
-}
-bool isStop(char* input) {
-  return input[0] == 's' && input[1] == 't' && input[2] == 'o' && input[3] == 'p';
-}
-bool isQuit(char* input) {
-  return input[0] == 'q' && input[1] == 'u' && input[2] == 'i' && input[3] == 't';
-}
-u32 isRun(char* input) {
-  bool ans = input[0] == 'r' && input[1] == 'u' && input[2] == 'n' && input[3] == 'p';
-  if (! ans) return 0;
-  u32 i = 4, answer = 0;
-  while( i < 20 && (input[i] > '9' || input[i] < '0' )) {
-    ++i;
-  }
-  for(;i < 20 && input[i] != 0; ++i) {
-    answer *= 10;
-    answer += static_cast<int>(input[i]);
-  }
-  return answer;
-}
 
 class Player{
 public:
@@ -68,25 +45,111 @@ public:
 
 class Area {
 public:
-  std::vector<DotArea>;
+  u32 len;
+  std::list<DotArea> dot_areas;
+  Area() : len(0) {}
+
+  void addPoint(Point&& point, u32 t) {
+    dot_areas.emplace_back({point, t});
+    ++len;
+  }
 
 };
 
 class Table {
 
 private:
-  double x_min, x_max, y_min, y_max;
+  ld x_min, x_max, y_min, y_max;
   u32 max_players_number;
   u32 areas_number;
   std::vector<Area> areas;
   std::list<Player> players;
-  players_count;
+  u32 players_count, make_turn;
+  std::vector<std::mutex> mutexes;
 
 public:
   Table(u32 a) : x_min(0), x_max(1e6), y_min(0), y_max(1e6), max_players_number(0), areas_number(a), areas(areas_number)
-          , players_count(0) {}
-  Table(u32 n, u32 m, u32 pla_n, u32 a) : x_min(0), x_max(n), y_min(1e6), y_max(m), max_players_number(0), areas_number(a)
-          , areas(areas_number), players_count(0) {}
+          , players_count(0), make_turn(0), mutexes(areas_number) {}
+  Table(u32 n, u32 m, u32 a) : x_min(0), x_max(n), y_min(0), y_max(m), max_players_number(0), areas_number(a)
+          , areas(areas_number), players_count(0), make_turn(0), mutexes(areas_number) {}
+
+  void reset(u32 n, u32 m, u32 a) {
+    x_max = n; y_max = m; areas_number = a;
+  }
+
+  void addPoint(Point&& point) {
+    u32 i = static_cast<u32> ((point.x - x_min) / (x_max - x_min) * areas_number + 0.0000001);
+    areas[i].addPoint(std::forward<Point>(point));
+  }
+
+  void optimize(u32 i) {
+    //first part
+    mutexes[i].lock();
+    Area& my_area = areas[i];
+    u32 max_area = i;
+    for(auto& it: my_area.dot_areas) {
+      if (! it->isActive)
+        continue;
+      max_area = max(max_area, it->max_area);
+      auto& new_it = it;
+      while(new_it != my_area.dot_areas.end()) {
+        if (it == new_it || ! new_it.isActive) {
+          continue; 
+          ++new_it
+        }
+        boolAndIt answer;
+        if ((answer = it->isCombinable(*new_it)).first == true) {
+          it->combine(*new_it, answer);
+          my_area.dot_areas.erase(new_it++);
+          --my_area.len;
+          it->ezOptimize();
+          it->Djarvis();
+        }else if(it->hasIn(*new_it)) {
+          new_it->isActive = false;
+        } else if(new_it->hasIn(*it)) {
+          it->isActive = false;
+        } else {
+          ++new_it;
+        }
+      }
+    }
+    //we have mutex order so first will combine areas with big number
+    for(u32 j = i + 1; j < min(max_area + 1, areas_number) + 1; ++j) {
+      mutexes[j].lock();
+      //can work with j now
+      Area& new_area = areas[j];
+      for(auto& it: my_area.dot_areas) {
+        if (!it->isActive)
+          continue;
+        max_area = max(max_area, it->max_area);
+        auto& new_it = new_area.dot_areas.begin();
+        while(new_it != my_area.dot_areas.end()) {
+          if (!new_it.isActive) {
+            continue; 
+            ++new_it
+          }
+          boolAndIt answer;
+          if ((answer = it->isCombinable(*new_it)).first == true) {
+            it->combine(*new_it, answer);
+            new_area.dot_areas.erase(new_it++);
+            --new_area.len;
+            it->ezOptimize();
+            it->Djarvis();
+          }else if(it->hasIn(*new_it)) {
+            new_it->isActive = false;
+          } else if(new_it->hasIn(*it)) {
+            it->isActive = false;
+          } else {
+            ++new_it;
+          }
+        }
+      }
+    }
+
+    for(u32 j = min(max_area + 1, areas_number); j >= i; --j) {
+      mutexes[j].unlock();
+    }
+  }
 
   void connect() {
 
@@ -180,11 +243,32 @@ public:
           }
           ld x = 0, y = 0;
           u32 i = 0;
-          while (true) {
-            if (buffer[i] <= '9' || buffer[i] >= '0') {
-              x *= 10; x += static_cast<int>(buffer[i]);
-            }
+          while (buffer[i] <= '9' || buffer[i] >= '0') {
+            x *= 10; x += static_cast<int>(buffer[i]); ++i;
           }
+          ++i;
+          ans = 0.1;
+          while (buffer[i] <= '9' || buffer[i] >= '0') {
+            x += ans * buffer[i]; ans /= 10; ++i;
+          }
+          while (!(buffer[i] <= '9' || buffer[i] >= '0')) {
+            ++i
+          }
+          while (buffer[i] <= '9' || buffer[i] >= '0') {
+            y *= 10; y += static_cast<int>(buffer[i]); ++i;
+          }
+          ++i;
+          ans = 0.1;
+          while (buffer[i] <= '9' || buffer[i] >= '0') {
+            y += ans * buffer[i]; ans /= 10; ++i;
+          }
+          table.addPoint(std::move(Point), player->number);
+          ++make_turn;
+        }
+      } // end for
+      if (make_turn == players_count && player_count != 0) {
+        for(u32 i = 0; i < areas_number; ++i) {
+          
         }
       }
     }

@@ -14,6 +14,7 @@
 #include <typeinfo>
 #include <set>
 #include <list>
+#include <utility>
 #define PI 3.1415926535897932384626433832795
 using ld = long double;
 using ll = long long;
@@ -135,6 +136,18 @@ struct Point {
   }
 };
 
+u32 max(u32 a, u32 b) {
+  if (a > b)
+    return a;
+  return b;
+}
+
+u32 min(u32 a, u32 b) {
+  if (a < b)
+    return a;
+  return b;
+}
+
 ld Radius = 10;
 
 struct boolAndIt{
@@ -152,22 +165,24 @@ bool smartCompare(Point cmpPoint, Point b, Point c) {
 class DotArea{
 private:
   bool isActive;
-  std::list<Point> points;
   u32 team_number;
   u32 len;
+  u32 max_area;
+  std::list<Point> points;
 public:
-  DotArea(const vector<Point>& p_inp, u32 t) : isActive(true) {
+  DotArea(const vector<Point>& p_inp, u32 t) : isActive(true), team_number(t), len(p_int.size()), max_area(0) {
     team_number = t;
     points(p_inp.begin(), p_inp.end());
     len = p_inp.size();
   }
-  DotArea(const Point& p_inp, u32 t) : isActive(true) {
-    team_number = t;
+  DotArea(const Point& p_inp, u32 t) : isActive(true), team_number(t), len(1), max_area(0) {
     points.push_back(p_inp);
-    len = 1;
+  }
+  DotArea(Point&& p_inp, u32 t) : isActive(true), team_number(t), len(1), max_area(0)  {
+    points.emplace_back(std::forward<Point>(p_inp));
   }
 
-  bool isIn(const Point& point) const {
+  bool hasIn(const Point& point) const {
     std::set<Point>::const_iterator it_prev = nullptr, it = points.begin();
     int per = 0;
     while (it != points.end()) {
@@ -181,9 +196,9 @@ public:
     return per % 2;
   }
 
-  bool isIn(const ConvexHull& hull) const {
+  bool hasIn(const DotArea& hull) const {
     for (const auto& point: hull.points) {
-      if (! isIn(point))
+      if (! hasIn(point))
         return false;
     }
     return true;
@@ -200,6 +215,7 @@ public:
   }
 
   void combine(DotArea& other, boolAndIt answer) {
+    max_area = max(max_area, other.max_area);
     Point p_new = Point(*(answer.first_it));
     const auto& pos = std::next(answer.first_it);
     points.splice(pos, other.points, answer.second_it, other.points.end());
