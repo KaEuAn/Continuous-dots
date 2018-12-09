@@ -5,7 +5,6 @@
 #ifndef CONTINUOUS_DOTS_BOTS_H
 #define CONTINUOUS_DOTS_BOTS_H
 
-#endif //CONTINUOUS_DOTS_BOTS_H
 
 #include <cstdlib>
 #include "geometry.h"
@@ -64,10 +63,13 @@ public:
         resp[i] = answer[i];
       }
       while(bots_iterations[bot_thread_number] == bots_made[bot_thread_number]) {
-        cond_var.wait(std::unique_lock());
+        cond_var.wait(std::unique_lock<std::mutex>(std::mutex()));
       }
       send(Socket, resp, answer.size());
     }
 
   }
 };
+
+
+#endif //CONTINUOUS_DOTS_BOTS_H

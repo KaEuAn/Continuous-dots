@@ -5,7 +5,7 @@
 #ifndef CONTINUOUS_DOTS_GEOMETRY_H
 #define CONTINUOUS_DOTS_GEOMETRY_H
 
-#endif //CONTINUOUS_DOTS_GEOMETRY_H
+
 
 #include <cstdio>
 #include <vector>
@@ -301,3 +301,5 @@ public:
     points = new_list; 
   }
 };
+
+#endif //CONTINUOUS_DOTS_GEOMETRY_H

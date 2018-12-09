@@ -34,20 +34,37 @@ u32 isRun(char* input) {
   return answer;
 }
 
-int main(int argc, char *argv[]) {
-  u32 n = 1000, m = 1000, player_number = 2, area_number = 4, count;
-  std::condition_variable cond_var;
-  
-  char* input[20];
-  clear(input, 20);
+Class Game() {
+  u32 n, m, player_number, area_number, count;
   bool isStarted = false;
   pthread_t player_comp;
   
-  Table table(n, m, area_number);
-  std::vector<Bot> bots(player_number, 1);
-  std::vector<std::mutex> mutexes(area_number + 1);
-  std::vector<u32> bots_iterations(player_number, 0);
-  std::vector<u32> bots_made(player_number, 0);
+  Table table;
+  std::vector<Bot> bots;
+  std::vector<std::mutex> mutexes;
+  std::vector<u32> bots_iterations;
+  std::vector<u32> bots_made;
+  
+  std::condition_variable cond_var;
+  
+  char* input;
+
+  Game(): n(1000), m(1000), player_number(2), area_number(4), count(0), isStarted(false), table(n, m, area_number)
+  ,bots(player_number, 1), mutexes(area_number + 1), bots_iterations(player_number, 0), bots_made(player_number, 0){
+    input = new char[20];
+    clear(input, 20);
+  }
+  ~Game() {
+    delete[] input;
+  }
+
+  м
+}
+
+int main(int argc, char *argv[]) {
+  Game game;
+  
+  
   while(gets(input)) {
     if (isStart(input)) {
       if (isStarted) {
@@ -64,11 +81,11 @@ int main(int argc, char *argv[]) {
         m = static_cast<int>(argv[2]);
       }
       table.reset(n, m, area_number);
-      std::thread(table.connect).detach();
+      std::thread(&table.connect).detach();
 
       for(u32 i = 0; i < bots.size(); ++i) {
         bots[i].team_number = i + 1;
-        std::thread(bots[i].connect, std::ref(bots_iterations), std::ref(bots_made), i, std::ref(cond_var)).detach();
+        std::thread(&bots[i].connect, std::ref(bots_iterations), std::ref(bots_made), i, std::ref(cond_var)).detach();
       }
 
     } else if (count = isRun(input)) {

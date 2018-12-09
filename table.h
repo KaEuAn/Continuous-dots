@@ -5,17 +5,7 @@
 #ifndef CONTINUOUS_DOTS_TABLE_H
 #define CONTINUOUS_DOTS_TABLE_H
 
-#endif //CONTINUOUS_DOTS_TABLE_H
-
-#include "geometry.h"//
-// Created by Eugene on 30.11.2018.
-//
-
-#ifndef INC_4_SEMESTER_CONNECTION_H
-#define INC_4_SEMESTER_CONNECTION_H
-
-#endif //INC_4_SEMESTER_CONNECTION_H
-
+#include "geometry.h"
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -268,9 +258,12 @@ public:
       } // end for
       if (make_turn == players_count && player_count != 0) {
         for(u32 i = 0; i < areas_number; ++i) {
-          
+
         }
       }
     }
   }
 };
+
+
+#endif //CONTINUOUS_DOTS_TABLE_H
