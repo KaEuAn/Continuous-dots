@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include "geometry.cpp"
+#include "geometry.hpp"
 #include "table.hpp"
 #include <iostream>
 #include <stdio.h>

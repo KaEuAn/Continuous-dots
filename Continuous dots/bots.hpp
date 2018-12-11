@@ -15,7 +15,7 @@ class Game;
 class Bot{
 public:
   u32 team_number;
-  Bot(u32 n) : team_number(n) {}
+  Bot(u32 n);
 
   Point makeTurn(u32 n, u32 m);
   

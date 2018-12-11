@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bots.hpp"
-#include "game.cpp"
+#include "game.hpp"
 #include <arpa/inet.h>
 
 std::string toString(const Point& x)
@@ -10,6 +10,8 @@ std::string toString(const Point& x)
     ss << x.x << ' ' << x.y;
     return ss.str();
 }
+
+Bot::Bot(u32 n) : team_number(n) {}
 
 Point Bot::makeTurn(u32 n, u32 m){
     return Point(n * std::rand(), m * std::rand());
