@@ -13,12 +13,13 @@
 #include <utility>
 #include <iostream>
 #include <iomanip>
-#define PI 3.1415926535897932384626433832795
+#include <cmath>
+#include <iostream>
 using ld = long double;
 using ll = long long;
 using u32 = uint32_t;
 
-ld eps = 2e-10;
+
 
 
 bool isEqual (const ld a, const ld b);
@@ -64,8 +65,6 @@ u32 min(u32 a, u32 b);
 
 
 bool isEqual (const Point& a, const Point& b);
-
-ld Radius = 10;
 
 struct boolAndIt{
   bool answer;

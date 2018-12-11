@@ -1,4 +1,9 @@
 #include "geometry.hpp"
+#include <cmath>
+#define PI 3.1415926535897932384626433832795
+ld eps = 2e-10;
+ld Radius = 10;
+
 
 bool isEqual (const ld a, const ld b) {
   ld difference = a - b;

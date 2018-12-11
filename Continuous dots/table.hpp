@@ -12,12 +12,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
-#include <string.h>
+#include <string>
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
-#include <stdlib.h>
 #include <string>
+#include <cstring>
 #include <pthread.h>
 #include <thread>
 #include <mutex>
