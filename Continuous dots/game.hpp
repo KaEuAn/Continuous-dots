@@ -13,28 +13,10 @@
 #include <deque>
 
 
-bool isStart(char* input) {
-  return input[0] == 's' && input[1] == 't' && input[2] == 'a' && input[3] == 'r' && input[4] == 't';
-}
-bool isStop(char* input) {
-  return input[0] == 's' && input[1] == 't' && input[2] == 'o' && input[3] == 'p';
-}
-bool isQuit(char* input) {
-  return input[0] == 'q' && input[1] == 'u' && input[2] == 'i' && input[3] == 't';
-}
-u32 isRun(char* input) {
-  bool ans = input[0] == 'r' && input[1] == 'u' && input[2] == 'n' && input[3] == 'p';
-  if (! ans) return 0;
-  u32 i = 4, answer = 0;
-  while( i < 20 && (input[i] > '9' || input[i] < '0' )) {
-    ++i;
-  }
-  for(;i < 20 && input[i] != 0; ++i) {
-    answer *= 10;
-    answer += static_cast<int>(input[i]);
-  }
-  return answer;
-}
+bool isStart(char* input);
+bool isStop(char* input);
+bool isQuit(char* input);
+u32 isRun(char* input);
 
 class Game {
 public:

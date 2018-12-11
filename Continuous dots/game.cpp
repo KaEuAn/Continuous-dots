@@ -3,7 +3,31 @@
 #include "game.hpp"
 #include "table.hpp"
 
+bool isStart(char* input) {
+  return input[0] == 's' && input[1] == 't' && input[2] == 'a' && input[3] == 'r' && input[4] == 't';
+}
 
+bool isStop(char* input) {
+  return input[0] == 's' && input[1] == 't' && input[2] == 'o' && input[3] == 'p';
+}
+
+bool isQuit(char* input) {
+  return input[0] == 'q' && input[1] == 'u' && input[2] == 'i' && input[3] == 't';
+}
+
+u32 isRun(char* input) {
+  bool ans = input[0] == 'r' && input[1] == 'u' && input[2] == 'n' && input[3] == 'p';
+  if (! ans) return 0;
+  u32 i = 4, answer = 0;
+  while( i < 20 && (input[i] > '9' || input[i] < '0' )) {
+    ++i;
+  }
+  for(;i < 20 && input[i] != 0; ++i) {
+    answer *= 10;
+    answer += static_cast<int>(input[i]);
+  }
+  return answer;
+}
 
 Game::Game(): n(1000), m(1000), player_number(2), area_number(4), count(0), isStarted(false), isStopped(false), isQuited(false), table(n, m, area_number)
 ,bots(player_number, 1), bot_mutexes(area_number + 1), bots_iterations(player_number, 0), bots_made(player_number, 0){
