@@ -41,6 +41,7 @@ Game::~Game() {
 
 void Game::stop() {
   isStopped = true;
+  cond_var.notify_all();
 }
 
 void Game::print() {
@@ -93,6 +94,7 @@ void Game::process(int argc, char *argv[]) {
     } else if (isQuit(input)) {
       std::cout << "get quit signal\n";
       isQuited = true;
+      cond_var.notify_all();
       server_thread.join();
       for(u32 i = 0; i < player_number; ++i) {
           bot_threads[i].join();

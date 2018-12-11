@@ -56,6 +56,7 @@ void Bot::connect(Game* game, u32 bot_thread_number) {
       while((game->bots_iterations[bot_thread_number] == game->bots_made[bot_thread_number] || game->isStopped) && !game->isQuited) {
         // т.к. либо они изначально равны, либо мы остановились и нужно приравнять, т.к. мы под мьютексом - всё ок
         game->bots_iterations[bot_thread_number] = game->bots_made[bot_thread_number];
+        std::cout << "Bot " << bot_thread_number<< game->bots_iterations[bot_thread_number] << ' ' << game->bots_made[bot_thread_number]<< " has\n";
         if (game->isStopped) {
           std::cout << "Bot " << bot_thread_number << " is stopped\n";
         }

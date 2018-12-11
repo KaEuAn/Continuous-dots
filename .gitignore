@@ -1,3 +1,3 @@
-CMake*
 cmake*
+!CMakeLists.txt
 .idea*
