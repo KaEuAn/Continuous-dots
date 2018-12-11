@@ -13,7 +13,7 @@ Player::Player(u32 n, int s) : number(n), socket(s) {}
 Area::Area() : len(0) {}
 
 void Area::addPoint(Point&& point, u32 t) {
-  dot_areas.emplace_back(DotArea(point, t));
+  dot_areas.emplace_back(DotArea(std::forward<Point>(point), t));
   ++len;
 }
 
@@ -23,6 +23,14 @@ void Area::print() const {
     if (isPrinted)
       std::cout << '\n';
   }
+}
+
+void print_buf(char* buffer, int size) {
+  std::cout << "receive ";
+  for(int i = 0; i < size; ++i) {
+    std::cout << buffer[i];
+  }
+  std::cout << '\n';
 }
 
 Table::Table(u32 a) : x_min(0), x_max(1e6), y_min(0), y_max(1e6), max_players_number(0), areas_number(a), areas(areas_number)
@@ -49,6 +57,7 @@ void Table::reset(u32 n, u32 m, u32 a) {
 
 void Table::addPoint(Point&& point, u32 t) {
   u32 i = static_cast<u32> ((point.x - x_min) / (x_max - x_min) * areas_number + 0.0000001);
+  std::cout << i << '\n';
   areas[i].addPoint(std::forward<Point>(point), t);
 }
 
@@ -140,33 +149,34 @@ void Table::connect(Game* game) {
           players.erase(player);
           --players_count;
         }
+        print_buf(buffer, count);
         ld x = 0, y = 0;
-        u32 i = 0;
-        while (buffer[i] <= '9' || buffer[i] >= '0') {
-          x *= 10; x += static_cast<int>(buffer[i]); ++i;
+        u32 first_space = 0;
+        while (buffer[first_space] != ' ') {
+          ++first_space;
         }
-        ++i;
-        ld ans = 0.1;
-        while (buffer[i] <= '9' || buffer[i] >= '0') {
-          x += ans * buffer[i]; ans /= 10; ++i;
+        char first[first_space + 1];
+        for(int i = 0; i < first_space; ++i) {
+          first[i] = buffer[i];
         }
-        while (!(buffer[i] <= '9' || buffer[i] >= '0')) {
-          ++i;
+        first[first_space] = 0;
+        x = atof(first);
+        std::cout << x << '\n';
+        char second[count - first_space + 1];
+        for(int i = first_space + 1; i < count; ++i) {
+          second[i - first_space - 1] = buffer[i];
         }
-        while (buffer[i] <= '9' || buffer[i] >= '0') {
-          y *= 10; y += static_cast<int>(buffer[i]); ++i;
-        }
-        ++i;
-        ans = 0.1;
-        while (buffer[i] <= '9' || buffer[i] >= '0') {
-          y += ans * buffer[i]; ans /= 10; ++i;
-        }
+        second[count - first_space - 1] = 0;
+        y = atof(second);
+
+        std::cout << "point " << x << ' '<< y << " added\n";
         addPoint(std::move(Point(x, y)), player->number);
         ++make_turn;
       }
     } // end for
     if (make_turn == players_count && players_count != 0) {
       //make processing of table
+      std::cout << "stat processing table\n";
       for(u32 i = 0; i < areas_number; ++i) {
         threads[i] = (std::thread(&Table::optimize, this, i));
       }
@@ -174,6 +184,7 @@ void Table::connect(Game* game) {
       for(int i = areas_number - 1; i >= 0 ; --i) {
         threads[i].join();
       }
+      make_turn = 0;
     }
     if (game->isQuited) {
 

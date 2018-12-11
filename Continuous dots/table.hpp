@@ -36,6 +36,7 @@ public:
   Player(u32 n, int s);
 };
 
+void print(char*, int);
 
 
 class Area {

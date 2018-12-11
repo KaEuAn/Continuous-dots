@@ -14,7 +14,7 @@ std::string toString(const Point& x)
 Bot::Bot(u32 n) : team_number(n) {}
 
 Point Bot::makeTurn(u32 n, u32 m){
-    return Point(n * std::rand(), m * std::rand());
+    return Point(n * ((long double) std::rand() / RAND_MAX), m *((long double) std::rand() / RAND_MAX));
   }
 
 void Bot::connect(Game* game, u32 bot_thread_number) {
@@ -57,16 +57,17 @@ void Bot::connect(Game* game, u32 bot_thread_number) {
         // т.к. либо они изначально равны, либо мы остановились и нужно приравнять, т.к. мы под мьютексом - всё ок
         game->bots_iterations[bot_thread_number] = game->bots_made[bot_thread_number];
         if (game->isStopped) {
-          std::cout << "Bot " << bot_thread_number << " is stopped";
+          std::cout << "Bot " << bot_thread_number << " is stopped\n";
         }
         game->cond_var.wait(lock);
       }
+      std::cout <<  "player " << bot_thread_number << "is awoken\n";
       lock.unlock();
       if (game->isQuited) {
         return;
       }
       send(Socket, resp, answer.size(), 0);
-      std::cout << "player " << bot_thread_number << " make turn";
+      std::cout << "player " << bot_thread_number << " make turn\n";
     }
 
   }
