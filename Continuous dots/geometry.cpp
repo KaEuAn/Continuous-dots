@@ -190,7 +190,7 @@ boolAndIt DotArea::isCombinable(const DotArea& other) const {
 void DotArea::combine(DotArea& other, boolAndIt answer) {
   max_area = max(max_area, other.max_area);
   Point p_new = Point(*(answer.first_it));
-  pos = std::next(answer.first_it);
+  auto pos = std::next(answer.first_it);
   points.splice(pos, other.points, answer.second_it, other.points.end());
   points.splice(pos, other.points, other.points.begin(), other.points.end());
   points.emplace(pos, std::move(p_new));
