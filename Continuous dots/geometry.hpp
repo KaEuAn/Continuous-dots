@@ -68,8 +68,8 @@ bool isEqual (const Point& a, const Point& b);
 
 struct boolAndIt{
   bool answer;
-  std::list<Point>::const_iterator first_it;
-  std::list<Point>::const_iterator second_it;
+  std::list<Point>::iterator first_it;
+  std::list<Point>::iterator second_it;
 };
 
 //isLess
@@ -96,7 +96,7 @@ public:
 
   bool hasIn(const DotArea& hull) const;
 
-  boolAndIt isCombinable(const DotArea& other) const;
+  boolAndIt isCombinable(const DotArea& other);
 
   void combine(DotArea& other, boolAndIt answer);
 

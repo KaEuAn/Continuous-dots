@@ -177,20 +177,20 @@ bool DotArea::hasIn(const DotArea& hull) const {
 }
 
 
-boolAndIt DotArea::isCombinable(const DotArea& other) const {
-  for(auto it = points.begin(); it != points.end(); ++it) {
-    for(auto other_it = points.begin(); other_it != other.points.end(); ++other_it) {
+boolAndIt DotArea::isCombinable(const DotArea& other) {
+  for(std::list<Point>::iterator it = points.begin(); it != points.end(); ++it) {
+    for(std::list<Point>::iterator other_it = points.begin(); other_it != other.points.end(); ++other_it) {
       if (isLessThan(it->lengthToPoint(*other_it), Radius))
         return {true, it, other_it};
     }
   }
-  return {false, static_cast<std::list<Point>::const_iterator>(nullptr), static_cast<std::list<Point>::const_iterator>(nullptr)};
+  return {false, static_cast<std::list<Point>::iterator>(nullptr), static_cast<std::list<Point>::iterator>(nullptr)};
 }
 
 void DotArea::combine(DotArea& other, boolAndIt answer) {
   max_area = max(max_area, other.max_area);
   Point p_new = Point(*(answer.first_it));
-  auto pos = std::next(answer.first_it);
+  std::list<Point>::iterator pos = std::next(answer.first_it);
   points.splice(pos, other.points, answer.second_it, other.points.end());
   points.splice(pos, other.points, other.points.begin(), other.points.end());
   points.emplace(pos, std::move(p_new));
