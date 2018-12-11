@@ -1,31 +1,21 @@
-//
-// Created by Eugene on 27.11.2018.
-//
 #pragma once
 
-#include <cstdlib>
-#include "geometry.cpp"
-#include <string>
-#include <condition_variable>
+#include "bots.hpp"
+#include "game.cpp"
+#include <arpa/inet.h>
 
-template<Typename T>
-std::string toString(T val, T val2)
+std::string toString(const Point& x)
 {
     std::stringstream ss("");
-    ss << val << ' ' << val2;
+    ss << x.x << ' ' << x.y;
     return ss.str();
 }
 
-Class Bot{
-public:
-  u32 team_number;
-  Bot(u32 n) : team_number(n) {}
-
-  Point makeTurn(u32 n, u32 m){
-    return {n * std::rand(), m * std::rand()};
+Point Bot::makeTurn(u32 n, u32 m){
+    return Point(n * std::rand(), m * std::rand());
   }
 
-  void connect(Game* game, bot_thread_number) {
+void Bot::connect(Game* game, u32 bot_thread_number) {
     struct sockaddr_in address;
     struct sockaddr_in serv_addr; 
     int Socket;
@@ -41,36 +31,39 @@ public:
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)  
     { 
         printf("Bots, Invalid address/Address not supported \n"); 
-        return -1; 
+        return; 
     } 
-    if (connect(Socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
+    if (::connect(Socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
     { 
         printf("Bot, Connection Failed \n"); 
-        return -1; 
+        return; 
     }
 
     while(true) {
       char buffer[1024] = {0};
+      int count;
       if((count = read(Socket, buffer, 1024)) <= 0) {
         break;
       }
-      std::string answer = toString(makeTurn());
+      std::string answer = toString(makeTurn(game->n, game->m));
       char resp[1000];
       for(u32 i = 0; i < answer.size(); ++i) {
         resp[i] = answer[i];
       }
-      std::unique_lock<std::mutex> lock(game->bots_mutexes[bot_thread_number]);
-      while(game->bots_iterations[bot_thread_number] == game->bots_made[bot_thread_number] || game->isStopped) {
+      std::unique_lock<std::mutex> lock(game->bot_mutexes[bot_thread_number]);
+      while((game->bots_iterations[bot_thread_number] == game->bots_made[bot_thread_number] || game->isStopped) && !game->isQuited) {
         // т.к. либо они изначально равны, либо мы остановились и нужно приравнять, т.к. мы под мьютексом - всё ок
         game->bots_iterations[bot_thread_number] = game->bots_made[bot_thread_number];
         if (game->isStopped) {
           std::cout << "Bot " << bot_thread_number << " is stopped";
         }
-        cond_var.wait(lock);
+        game->cond_var.wait(lock);
       }
       lock.unlock();
-      send(Socket, resp, answer.size());
+      if (game->isQuited) {
+        return;
+      }
+      send(Socket, resp, answer.size(), 0);
     }
 
   }
-};

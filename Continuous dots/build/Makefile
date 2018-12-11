@@ -150,33 +150,6 @@ bots.cpp.s:
 	$(MAKE) -f CMakeFiles/Continuous_dots.dir/build.make CMakeFiles/Continuous_dots.dir/bots.cpp.s
 .PHONY : bots.cpp.s
 
-connection.o: connection.cpp.o
-
-.PHONY : connection.o
-
-# target to build an object file
-connection.cpp.o:
-	$(MAKE) -f CMakeFiles/Continuous_dots.dir/build.make CMakeFiles/Continuous_dots.dir/connection.cpp.o
-.PHONY : connection.cpp.o
-
-connection.i: connection.cpp.i
-
-.PHONY : connection.i
-
-# target to preprocess a source file
-connection.cpp.i:
-	$(MAKE) -f CMakeFiles/Continuous_dots.dir/build.make CMakeFiles/Continuous_dots.dir/connection.cpp.i
-.PHONY : connection.cpp.i
-
-connection.s: connection.cpp.s
-
-.PHONY : connection.s
-
-# target to generate assembly for a file
-connection.cpp.s:
-	$(MAKE) -f CMakeFiles/Continuous_dots.dir/build.make CMakeFiles/Continuous_dots.dir/connection.cpp.s
-.PHONY : connection.cpp.s
-
 game.o: game.cpp.o
 
 .PHONY : game.o
@@ -297,9 +270,6 @@ help:
 	@echo "... bots.o"
 	@echo "... bots.i"
 	@echo "... bots.s"
-	@echo "... connection.o"
-	@echo "... connection.i"
-	@echo "... connection.s"
 	@echo "... game.o"
 	@echo "... game.i"
 	@echo "... game.s"
