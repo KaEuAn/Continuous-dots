@@ -100,7 +100,6 @@ void Table::connect(Game* game) {
     struct timeval tim;
     tim.tv_sec = 1;
     int select_answer = select(max_sd + 1, &readset, NULL, NULL, &tim);
-    printf("get select response\n");
     if ((select_answer < 0) && (errno != EINTR)) { //EINTR = cought a signal
       perror("select error");
       exit(1);
@@ -115,7 +114,7 @@ void Table::connect(Game* game) {
       ++max_players_number;
       players.emplace_back(Player(max_players_number, new_socket));
       ++players_count;
-      printf("accept succesful %d\n", new_socket);
+      printf("server accept succesful player with socket %d\n", new_socket);
 
       std::string s = std::to_string(x_min) + " " + std::to_string(x_max) + " " +
               std::to_string(y_min) + " " + std::to_string(y_max) + "\n";

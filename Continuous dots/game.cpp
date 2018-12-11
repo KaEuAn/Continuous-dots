@@ -16,7 +16,7 @@ bool isQuit(char* input) {
 }
 
 u32 isRun(char* input) {
-  bool ans = input[0] == 'r' && input[1] == 'u' && input[2] == 'n' && input[3] == 'p';
+  bool ans = input[0] == 'r' && input[1] == 'u' && input[2] == 'n';
   if (! ans) return 0;
   u32 i = 4, answer = 0;
   while( i < 20 && (input[i] > '9' || input[i] < '0' )) {
@@ -49,10 +49,12 @@ void Game::print() {
 
 void Game::process(int argc, char *argv[]) {
   while(true) {
+    std::cout << "enter your command\n";
     fgets(input, 20, stdin);
     if (isStart(input)) {
+      std::cout << "get start signal\n";
       if (isStarted) {
-        std::cout << "we are started\n";
+        std::cout << "we are already started\n";
         continue;
       }
       isStarted = true;
@@ -66,13 +68,16 @@ void Game::process(int argc, char *argv[]) {
       }
       table.reset(n, m, area_number);*/
       server_thread = std::thread(&Table::connect, table, this);
-
+      std::cout << "make server_thread\n";
       for(u32 i = 0; i < bots.size(); ++i) {
         bots[i].team_number = i + 1;
         bot_threads.push_back(std::move(std::thread(&Bot::connect, bots[i], this, i)));
+        std::cout << "make bot thread " << i << '\n';
       }
+      std::cout << "end of start\n";
 
     } else if ((count = isRun(input))) {
+      std::cout << "get run signal\n";
       for(u32 num = 0; num < player_number; ++num) {
         bot_mutexes[num].lock();
         bots_iterations[num] += count;
@@ -83,8 +88,10 @@ void Game::process(int argc, char *argv[]) {
       isStopped = false;
       cond_var.notify_all();
     } else if (isStop(input)) {
+      std::cout << "get stop signal\n";
       stop();
     } else if (isQuit(input)) {
+      std::cout << "get quit signal\n";
       isQuited = true;
       server_thread.join();
       for(u32 i = 0; i < player_number; ++i) {

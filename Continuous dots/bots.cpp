@@ -66,6 +66,7 @@ void Bot::connect(Game* game, u32 bot_thread_number) {
         return;
       }
       send(Socket, resp, answer.size(), 0);
+      std::cout << "player " << bot_thread_number << " make turn";
     }
 
   }
