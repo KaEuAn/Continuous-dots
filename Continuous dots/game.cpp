@@ -30,7 +30,7 @@ u32 isRun(char* input) {
 }
 
 Game::Game(): n(1000), m(1000), player_number(2), area_number(4), count(0), isStarted(false), isStopped(false), isQuited(false), table(n, m, area_number)
-,bots(player_number, 1), bot_mutexes(area_number + 1), bots_iterations(player_number, 0), bots_made(player_number, 0){
+,bots(player_number, 1), bot_mutexes(area_number + 1), bots_iterations(player_number, 0), bots_made(player_number, 0), cond_var(2){
   input = new char[20];
   clear(input, 20);
 }
@@ -41,7 +41,8 @@ Game::~Game() {
 
 void Game::stop() {
   isStopped = true;
-  cond_var.notify_all();
+  cond_var[0].notify_all();
+  cond_var[1].notify_all();
 }
 
 void Game::print() {
@@ -87,14 +88,16 @@ void Game::process(int argc, char *argv[]) {
         bot_mutexes[num].unlock();
       }
       isStopped = false;
-      cond_var.notify_all();
+      cond_var[0].notify_all();
+      cond_var[1].notify_all();
     } else if (isStop(input)) {
       std::cout << "get stop signal\n";
       stop();
     } else if (isQuit(input)) {
       std::cout << "get quit signal\n";
       isQuited = true;
-      cond_var.notify_all();
+      cond_var[0].notify_all();
+      cond_var[1].notify_all();
       server_thread.join();
       for(u32 i = 0; i < player_number; ++i) {
           bot_threads[i].join();

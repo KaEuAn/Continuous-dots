@@ -176,9 +176,9 @@ void Table::connect(Game* game) {
     } // end for
     if (make_turn == players_count && players_count != 0) {
       //make processing of table
-      std::cout << "stat processing table\n";
+      std::cout << "start processing table\n";
       for(u32 i = 0; i < areas_number; ++i) {
-        threads[i] = (std::thread(&Table::optimize, this, i));
+        threads[i] = std::move(std::thread(&Table::optimize, this, i));
       }
       //our barrier
       for(int i = areas_number - 1; i >= 0 ; --i) {
@@ -223,9 +223,12 @@ void Table::optimize(u32 i) {
       }
     }
   }
+  std::cout << "second part start, optimize " << i << ' ' << max_area << ' ' << areas_number << '\n';
   //we have mutex order so first will combine areas with big number
-  for(u32 j = i + 1; j < min(max_area + 1, areas_number) + 1; ++j) {
+  for(u32 j = i + 1; j < min(max_area, areas_number) + 1; ++j) {
+    std::cout << j << '\n';
     mutexes[j].lock();
+    std::cout << "lcok mutex " << j << '\n';
     //can work with j now
     Area& new_area = areas[j];
     for(auto it = my_area.dot_areas.begin(); it != my_area.dot_areas.end(); ++it) {
@@ -234,6 +237,7 @@ void Table::optimize(u32 i) {
       max_area = max(max_area, it->max_area);
       auto new_it = new_area.dot_areas.begin();
       while(new_it != my_area.dot_areas.end()) {
+        std::cout << 1 << '\n';
         if (!new_it->isActive) {
           continue; 
           ++new_it;
@@ -256,9 +260,10 @@ void Table::optimize(u32 i) {
     }
   }
 
-  for(u32 j = min(max_area + 1, areas_number); j >= i; --j) {
+  for(u32 j = min(max_area, areas_number); j >= i; --j) {
     mutexes[j].unlock();
   }
+  std::cout << "unlocked\n";
 }
 
 void Table::print() {

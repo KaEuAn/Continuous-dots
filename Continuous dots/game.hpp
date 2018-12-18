@@ -32,7 +32,7 @@ public:
   std::vector<std::thread> bot_threads;
   std::thread server_thread;
   
-  std::condition_variable cond_var;
+  std::vector<std::condition_variable> cond_var;
   
   char* input;
   Game();

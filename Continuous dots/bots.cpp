@@ -3,6 +3,7 @@
 #include "bots.hpp"
 #include "game.hpp"
 #include <arpa/inet.h>
+#include <sstream>
 
 std::string toString(const Point& x)
 {
@@ -60,7 +61,7 @@ void Bot::connect(Game* game, u32 bot_thread_number) {
         if (game->isStopped) {
           std::cout << "Bot " << bot_thread_number << " is stopped\n";
         }
-        game->cond_var.wait(lock);
+        game->cond_var[bot_thread_number].wait(lock);
       }
       std::cout <<  "player " << bot_thread_number << "is awoken\n";
       lock.unlock();
